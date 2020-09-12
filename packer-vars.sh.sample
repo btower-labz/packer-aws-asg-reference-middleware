@@ -1,0 +1,4 @@
+export PACKER_PROFILE=packer
+export PACKER_REGION=us-east-1
+export PACKER_VPC_ID=vpc-xxx
+export PACKER_SUBNET_ID=subnet-xxx

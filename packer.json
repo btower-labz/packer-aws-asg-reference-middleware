@@ -1,0 +1,155 @@
+{
+    "variables": {
+      "packer_profile": "{{env `PACKER_PROFILE`}}",
+      "packer_region": "{{env `PACKER_REGION`}}",
+      "packer_vpc_id": "{{env `PACKER_VPC_ID`}}",
+      "packer_subner_id": "{{env `PACKER_SUBNET_ID`}}",
+      "packer_build_start": "{{isotime `2006-01-02T15:04:05`}}"
+    },
+    "builders": [    {
+      "type": "amazon-ebs",
+      "profile": "{{user `packer_profile`}}",
+      "region": "{{user `packer_region`}}",
+      "vpc_id": "{{user `packer_vpc_id`}}",
+      "subnet_id": "{{user `packer_subner_id`}}",
+      "source_ami_filter": {
+        "filters": {
+          "name": "aws-ec2-reference-system-*",
+          "virtualization-type": "hvm"
+        },
+        "owners": ["self"],
+        "most_recent": true
+      },
+      "instance_type": "t2.small",
+      "enable_t2_unlimited": true,
+      "force_deregister": false,
+      "shutdown_behavior": "terminate",
+      "ssh_username": "ec2-user",
+      "ssh_timeout": "10m",
+      "ssh_pty": true,
+      "associate_public_ip_address": true,
+      "ami_name": "aws-ec2-reference-middleware-{{isotime \"2006-01-02-15-04-05\"}}",
+      "ami_description": "AWS EC2 Reference Middleware Image",
+      "run_tags": {
+        "Name": "Packer: aws-ec2-reference-middleware",
+        "Environment": "Dev",
+        "Workload": "CI\\CD",
+        "PackerBuildName": "{{build_name}}",
+        "PackerBuildType": "{{build_type}}",
+        "PackerVersion": "{{packer_version}}"
+      },
+      "tags": {
+        "Name": "aws-ec2-reference-middleware-{{user `packer_build_start` | clean_resource_name }}",
+        "Family": "aws-ec2-reference-middleware",
+        "Project": "aws-ec2-reference",
+        "PackerBuildName": "{{build_name}}",
+        "PackerBuildType": "{{build_type}}",
+        "PackerVersion": "{{packer_version}}"
+      }
+    }],
+    "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "while [ ! -f /var/lib/cloud/instance/boot-finished ]; do echo 'Waiting for cloud-init ...'; sleep 1; done",
+        "sleep 10s"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "1m",
+      "inline": [
+        "mkdir -p /tmp/provision"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/files/security-update.sh",
+      "destination" : "/tmp/provision/security-update.sh",
+      "direction" : "upload"
+    },
+    {
+      "type": "shell",
+      "expect_disconnect": true,
+      "inline": [
+        "chmod +x /tmp/provision/*.sh",
+        "ls -la /tmp/provision",
+        "sudo -i /tmp/provision/security-update.sh",
+        "sudo shutdown -r now",
+        "while true; do sleep 100; echo ...; done;"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "1m",
+      "inline": [
+        "mkdir -p /tmp/provision"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/files/sample.config",
+      "destination" : "/tmp/provision/sample.config",
+      "direction" : "upload"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/files/provision-generic.sh",
+      "destination" : "/tmp/provision/provision-generic.sh",
+      "direction" : "upload"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/files/provision-java-11-amazon-corretto.sh",
+      "destination" : "/tmp/provision/provision-java-11-amazon-corretto.sh",
+      "direction" : "upload"
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/files/provision-wildfly.sh",
+      "destination" : "/tmp/provision/provision-wildfly.sh",
+      "direction" : "upload"
+    },
+    {
+      "type": "shell",
+      "expect_disconnect": true,
+      "inline": [
+        "sudo chmod +x /tmp/provision/*.sh",
+        "ls -la /tmp/provision",
+        "sudo -i /tmp/provision/provision-generic.sh",
+        "sudo -i /tmp/provision/provision-java-11-amazon-corretto.sh",
+        "sudo -i /tmp/provision/provision-wildfly.sh",
+        "sudo shutdown -r now",
+        "while true; do sleep 100; echo ...; done;"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "1m",
+      "inline": [
+        "mkdir -p /tmp/provision"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{template_dir}}/files/sanity-test.sh",
+      "destination" : "/tmp/provision/sanity-test.sh",
+      "direction" : "upload"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "chmod +x /tmp/provision/*.sh",
+        "ls -la /tmp/provision",
+        "/tmp/provision/sanity-test.sh"
+      ]
+    }
+   ],
+   "post-processors": [
+    {
+      "type": "manifest",
+      "output": "manifest.json",
+      "strip_path": true
+    }
+  ]
+}
