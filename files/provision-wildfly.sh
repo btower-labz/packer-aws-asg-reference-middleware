@@ -53,7 +53,16 @@ systemctl daemon-reload
 systemctl start wildfly
 systemctl status wildfly
 
-log 'Service launched ...'
+# TODO: WildFly Sanity checks
+
+log 'Demon enabled ...'
+
+systemctl stop wildfly
+systemctl disable wildfly
+
+log 'Daemon disabled ...'
+
+# TODO: Clean wildfly packer produces logs
 
 cd ${WILDFLY_DST}/wildfly && rm -rf ${WILDFLY_SRC}
 
