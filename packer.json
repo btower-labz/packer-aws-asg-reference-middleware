@@ -141,7 +141,8 @@
       "inline": [
         "chmod +x /tmp/provision/*.sh",
         "ls -la /tmp/provision",
-        "/tmp/provision/sanity-test.sh"
+        "/tmp/provision/sanity-test.sh",
+        "rm -rf /tmp/provision"
       ]
     }
    ],
