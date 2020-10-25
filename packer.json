@@ -15,7 +15,8 @@
       "source_ami_filter": {
         "filters": {
           "name": "aws-ec2-reference-system-*",
-          "virtualization-type": "hvm"
+          "virtualization-type": "hvm",
+          "state": "available"
         },
         "owners": ["self"],
         "most_recent": true
@@ -28,10 +29,10 @@
       "ssh_timeout": "10m",
       "ssh_pty": true,
       "associate_public_ip_address": true,
-      "ami_name": "aws-ec2-reference-middleware-{{isotime \"2006-01-02-15-04-05\"}}",
+      "ami_name": "aws-asg-reference-middleware-{{isotime \"2006-01-02-15-04-05\"}}",
       "ami_description": "AWS EC2 Reference Middleware Image",
       "run_tags": {
-        "Name": "Packer: aws-ec2-reference-middleware",
+        "Name": "Packer: aws-asg-reference-middleware",
         "Environment": "Dev",
         "Workload": "CI\\CD",
         "PackerBuildName": "{{build_name}}",
@@ -39,8 +40,8 @@
         "PackerVersion": "{{packer_version}}"
       },
       "tags": {
-        "Name": "aws-ec2-reference-middleware-{{user `packer_build_start` | clean_resource_name }}",
-        "Family": "aws-ec2-reference-middleware",
+        "Name": "aws-asg-reference-middleware-{{user `packer_build_start` | clean_resource_name }}",
+        "Family": "aws-asg-reference-middleware",
         "Project": "aws-ec2-reference",
         "PackerBuildName": "{{build_name}}",
         "PackerBuildType": "{{build_type}}",
@@ -100,14 +101,8 @@
     },
     {
       "type": "file",
-      "source": "{{template_dir}}/files/provision-java-11-amazon-corretto.sh",
-      "destination" : "/tmp/provision/provision-java-11-amazon-corretto.sh",
-      "direction" : "upload"
-    },
-    {
-      "type": "file",
-      "source": "{{template_dir}}/files/provision-wildfly.sh",
-      "destination" : "/tmp/provision/provision-wildfly.sh",
+      "source": "{{template_dir}}/files/provision-docker.sh",
+      "destination" : "/tmp/provision/provision-docker.sh",
       "direction" : "upload"
     },
     {
@@ -117,8 +112,7 @@
         "sudo chmod +x /tmp/provision/*.sh",
         "ls -la /tmp/provision",
         "sudo -i /tmp/provision/provision-generic.sh",
-        "sudo -i /tmp/provision/provision-java-11-amazon-corretto.sh",
-        "sudo -i /tmp/provision/provision-wildfly.sh",
+        "sudo -i /tmp/provision/provision-docker.sh",
         "sudo shutdown -r now",
         "while true; do sleep 100; echo ...; done;"
       ]

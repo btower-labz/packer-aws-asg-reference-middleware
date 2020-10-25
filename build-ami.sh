@@ -7,6 +7,8 @@ set -o pipefail
 
 source packer-vars.sh
 
+export AWS_REGION=${PACKER_REGION}
+
 aws sts get-caller-identity --profile ${PACKER_PROFILE}
 
 packer validate packer.json
